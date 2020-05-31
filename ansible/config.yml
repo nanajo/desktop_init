@@ -1,0 +1,40 @@
+- hosts: all
+  become: yes
+
+  vars:
+    User: shichijo
+    RepoName:
+      - dotfile
+      - desktop_firewall
+
+  tasks:
+    - name: Set destdir
+      become: yes
+      become_user: "{{ User }}"
+      shell: "echo {{ lookup('env','HOME') }}/config/"
+      register: DestDir
+
+    - name: Clone git repository
+      become: yes
+      become_user: "{{ User }}"
+      git:
+        repo: "https://github.com/nanajo/{{ item }}.git"
+        dest: "{{ DestDir.stdout }}/{{ item }}"
+        umask: '0077'
+      loop: "{{ RepoName }}"
+
+    - name: Install dotfile
+      become: yes
+      become_user: "{{ User }}"
+      shell: "/bin/bash {{ DestDir.stdout }}/dotfile/install.sh"
+    
+    - name: Set firewall rules
+      become: yes
+      file:
+        path: "/etc/iptables/{{ item }}"
+        src: "{{ DestDir.stdout }}/desktop_firewall/{{ item }}"
+        state: link
+        force: yes
+      loop:
+        - iptables.rules
+        - ip6tables.rules

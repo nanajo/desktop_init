@@ -1,0 +1,16 @@
+
+- hosts: all
+  become: yes
+  become_user: shichijo
+
+  tasks:
+    - name: Install yay AUR helper
+      aur: name=yay use=makepkg state=present
+
+    - name: Install AUR packages
+      aur:
+          use: yay
+          name:
+            - ttf-ricty
+            - visual-studio-code-bin
+            - dropbox
